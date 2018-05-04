@@ -1,1 +1,5 @@
 *.env
+__pycache__/
+bin/
+lib/
+pip-selfcheck.json

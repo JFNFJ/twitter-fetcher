@@ -5,12 +5,17 @@ from tweepy import Stream
 
 import redis
 import json
+import os
 
-consumer_key= "" # Use your consumer key here
-consumer_secret= "" # Use your consumer secret here
+import settings
 
-access_token= "" # Use your access token here
-access_token_secret= "" # User your access token secret here
+CONSUMER_KEY = os.getenv("CONSUMER_KEY")
+CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+
 
 # Fields to filter from raw tweets
 fields = ["id", "text", "geo", "coordinates", "place"]
@@ -19,9 +24,9 @@ user_fields = ["id", "name", "location"]
 class RedisListener(StreamListener):
 
     def __init__(self):
-        self.redis = redis.StrictRedis(host='localhost', port=6379, db=0)
-        self.auth = OAuthHandler(consumer_key, consumer_secret)
-        self.auth.set_access_token(access_token, access_token_secret)
+        self.redis = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+        self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+        self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
     def on_data(self, data):
         json_fields = json.loads(data)
@@ -42,6 +47,7 @@ class RedisListener(StreamListener):
 
     def _extract(self, json_fields, fields):
         return { key:value for key, value in json_fields.items() if key in fields }
+
 
 def listen_stream(track):
     redisListener = RedisListener()
