@@ -116,7 +116,7 @@ class TwitterFetcher(StreamListener):
         return filtered_data
 
     @staticmethod
-    def _get_location(location):
+    def _get_location(location, lang='es'):
         """
         Attemps to match a location from a string
 
@@ -139,3 +139,7 @@ class TwitterFetcher(StreamListener):
         @return: Dict with filtered fields of Jason
         """
         return {key: value for key, value in json_fields.items() if key in fields}
+
+
+twitterFetcher = TwitterFetcher()
+twitterFetcher.stream("Sampaoli")
