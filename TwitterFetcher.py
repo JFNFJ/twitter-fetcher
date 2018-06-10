@@ -27,7 +27,7 @@ class TwitterFetcher(StreamListener):
     tweet_fields = ["id", "text", "created_at", "geo", "coordinates", "place"]
     user_fields = ["id", "name", "location"]
 
-    def __init__(self):
+    def __init__(self, topic=""):
         """
         Initialize connections with Redis and Twitter API
 
@@ -38,6 +38,7 @@ class TwitterFetcher(StreamListener):
         self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
         self.twitter = Twitter(auth=OAuth(ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
+        self.topic = topic
 
     def on_data(self, data):
         """
@@ -54,8 +55,8 @@ class TwitterFetcher(StreamListener):
             return True
         else:
             filtered_tweet = self._filter_tweet(tweet)
-            print(json.dumps(filtered_tweet))
-            self.redis.lpush('twitter:stream', tweet)
+            # print(json.dumps(filtered_tweet))
+            self.redis.publish(f'twitter:{self.topic}:stream', tweet)
             return True
 
     def on_error(self, status):
@@ -84,6 +85,7 @@ class TwitterFetcher(StreamListener):
         @param filter_level: Dont remember
         @return: None
         """
+        self.topic = track.lower()
         stream = Stream(self.auth, self)
         stream.filter(follow, track, async, locations, stall_warnings,
                       languages, encoding, filter_level)
@@ -112,7 +114,7 @@ class TwitterFetcher(StreamListener):
         filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
-        self.redis.lpush('twitter:stream', filtered_data)
+        self.redis.publish(f'twitter:{self.topic}:stream', filtered_data)
         return filtered_data
 
     @staticmethod
@@ -139,7 +141,3 @@ class TwitterFetcher(StreamListener):
         @return: Dict with filtered fields of Jason
         """
         return {key: value for key, value in json_fields.items() if key in fields}
-
-
-twitterFetcher = TwitterFetcher()
-twitterFetcher.stream("Sampaoli")
