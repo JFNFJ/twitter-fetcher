@@ -56,7 +56,7 @@ class TwitterFetcher(StreamListener):
         else:
             filtered_tweet = self._filter_tweet(tweet)
             # print(json.dumps(filtered_tweet))
-            self.redis.publish(f'twitter:{self.topic}:stream', tweet)
+            self.redis.publish(f'twitter:{self.topic}:stream', filtered_tweet)
             return True
 
     def on_error(self, status):
