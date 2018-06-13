@@ -19,6 +19,8 @@ ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
 
+PAGE_SIZE = 100
+
 
 class TwitterFetcher(StreamListener):
     """
@@ -89,7 +91,7 @@ class TwitterFetcher(StreamListener):
         stream.filter(follow, track, async, locations, stall_warnings,
                       languages, encoding, filter_level)
 
-    def search(self, query, count=100, lang='es'):
+    def search(self, query, count=100, lang='es', max_id=None):
         """
         Searches for tweets matching query and other filter parameters
 
@@ -99,8 +101,60 @@ class TwitterFetcher(StreamListener):
         @param lang: Language for the tweets
         @return: List of tweets with their fields filtered
         """
-        tweets = self.twitter.search.tweets(q=query, count=count, lang=lang)['statuses']
+        self.topic = query.lower()
+        pages = count // PAGE_SIZE
+        last_page = count % PAGE_SIZE
+        query = {'q': query, 'count': PAGE_SIZE, 'lang': lang, 'max_id': max_id}
+        return self._search(query, pages, last_page)
+
+    def _search(self, query, pages, last_page):
+        """
+        Searches for tweets matching query, with paging according to pages and last_page
+
+        @param self:
+        @param query: Dictionary containing parameters for the query
+        @param pages: Amount of pages of tweets needed to search
+        @param last_page: Amount of tweets remaining in last page of tweets
+        @return: List of tweets with their fields filtered
+        """
+        tweets = []
+        for i in range(0, pages):
+            result = self._search_and_extend(query, tweets)
+            query = self._next(result['search_metadata'])
+        if last_page != 0:
+            query['count'] = last_page
+            self._search_and_extend(query, tweets)
         return [self._filter_tweet(tweet) for tweet in tweets]
+
+    def _search_and_extend(self, query, tweets):
+        """
+        Searches for tweets matching query and adds them to the list of tweets
+
+        @param self:
+        @param query: Dictionary containing parameters for the query
+        @param tweets: List of tweets where to store searched tweets
+        @return: The Result of the search
+        """
+        result = self.twitter.search.tweets(q=query['q'], count=query['count'],
+                                            lang=query['lang'], max_id=query['max_id'])
+        tweets.extend(result['statuses'])
+        return result
+
+    @staticmethod
+    def _next(metadata):
+        """
+        Forms a new query dict with the information on metadata
+
+        @param metadata: Metadata of previous search
+        @return: Dictionary with a query for the next page of tweets
+        """
+        params = metadata['next_results'].split('&')
+        query = {}
+        for p in params:
+            p = p.replace('?', '')
+            key, value = p.split('=')
+            query[key] = value
+        return query
 
     def _filter_tweet(self, tweet):
         """
@@ -117,7 +171,7 @@ class TwitterFetcher(StreamListener):
         return filtered_data
 
     @staticmethod
-    def _get_location(location, lang='es'):
+    def _get_location(location):
         """
         Attemps to match a location from a string
 

@@ -4,3 +4,4 @@ bin/
 lib/
 pip-selfcheck.json
 .idea/
+.vscode/
