@@ -12,9 +12,7 @@ def track():
     topic = request.args.get('topic')
     end = request.args.get('end')
     lang = request.args.get('lang')
-    app.logger.debug("Topic: %s", topic)
-    app.logger.debug("Ending: %s", end)
-    app.logger.debug("Lang: %s", lang)
+    app.logger.debug("Topic: %s\tEnding: %s\tLang: %s", topic, end, lang)
     p = Process(target=start_fetching, args=(topic, end, lang))
     p.daemon = True
     p.start()
