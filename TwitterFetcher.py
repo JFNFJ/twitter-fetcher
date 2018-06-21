@@ -5,19 +5,10 @@ from tweepy import Stream
 from twitter import Twitter, OAuth
 from geotext import GeoText
 
-import os
 import json
 import time
 from redis import StrictRedis
-
-import settings
-
-CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
-CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET")
-ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
+from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT
 
 PAGE_SIZE = 100
 
