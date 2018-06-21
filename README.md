@@ -39,10 +39,27 @@ Basico
 2. Levantar servidor `flask run`
 3. Otra forma `python api.py`
 
+### Flask-SQLAlchemy
+
+#### Migration
+
+1. Activar entorno `source bin/activate`
+2. Levantar una consola de python `python`
+3. Importar models `from models.models import db`
+4. Migrar models `db.create_all()`
+
+#### Variables de entorno
+
+* POSTGRESQL_DB (ejemplo `test_db`)
+* POSTGRESQL_HOST (ejemplo `localhost`)
+* POSTGRESQL_USER (ejemplo `postgres`)
+* POSTGRESQL_PASSWORD (ejemplo `postgres`)
+* POSTGRESQL_PORT (ejemplo `5432`)
+
 ### Redis
 
 Cuando se le pega al endpoint `/track?topic="Salud"` se empieza a publicar en un canal `twitter:salud:stream` 
-asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream`
+asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream` 
  
 ## Documentacion
 
