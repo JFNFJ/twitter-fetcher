@@ -59,3 +59,5 @@ asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream
 * [tweepy](http://tweepy.readthedocs.io/en/v3.5.0/)
 * [python-twitter](https://python-twitter.readthedocs.io/en/latest/getting_started.html)
 * [GeoText](http://geotext.readthedocs.io/en/latest/installation.html)
+* [SQLAlchemy](http://docs.sqlalchemy.org/en/latest/)
+* [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
