@@ -73,7 +73,6 @@ asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream
 * [Python](https://docs.python.org/3/)
 * [Redis](https://redis.io/documentation)
 * [Twitter](https://developer.twitter.com/en/docs)
-* [pytest](https://docs.pytest.org/en/latest/)
 
 ### Packages
 
@@ -83,3 +82,4 @@ asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream
 * [GeoText](http://geotext.readthedocs.io/en/latest/installation.html)
 * [SQLAlchemy](http://docs.sqlalchemy.org/en/latest/)
 * [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
+* [pytest](https://docs.pytest.org/en/latest/)
