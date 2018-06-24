@@ -3,19 +3,17 @@ from multiprocessing import Process
 from TwitterFetcher import TwitterFetcher
 import os
 import signal
-
-app = Flask(__name__)
+import datetime
+from settings import app
 
 
 @app.route("/track", methods=['GET'])
 def track():
     topic = request.args.get('topic')
-    end = request.args.get('end')
+    end = request.args.get('end') or datetime.date.today()
     lang = request.args.get('lang')
     app.logger.debug("Topic: %s\tEnding: %s\tLang: %s", topic, end, lang)
-    p = Process(target=start_fetching, args=(topic, end, lang))
-    p.daemon = True
-    p.start()
+    p = init_process(target=start_fetching, args=(topic, end, lang))
     app.logger.debug("Process: %s", p.pid)
     return str(f'Topic: {topic} Ending: {end} Fetch: {p.pid}')
 
@@ -28,9 +26,16 @@ def finish():
     return str(f'Finished: {pid}')
 
 
-def start_fetching(topic, end='2018-06-09', lang='es'):
+def start_fetching(topic, end=datetime.date.today(), lang='es'):
     twitter_fetcher = TwitterFetcher()
     twitter_fetcher.stream(topic, languages=[lang])
+
+
+def init_process(target, args):
+    p = Process(target=target, args=args)
+    p.daemon = True
+    p.start()
+    return p
 
 
 if __name__ == '__main__':

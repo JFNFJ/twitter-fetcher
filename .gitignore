@@ -5,3 +5,5 @@ lib/
 pip-selfcheck.json
 .idea/
 .vscode/
+.pytest_cache/
+*/.pytest_cache/

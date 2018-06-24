@@ -1,10 +1,5 @@
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from settings import POSTGRESQL_DB, POSTGRESQL_HOST, POSTGRESQL_PASSWORD, POSTGRESQL_PORT, POSTGRESQL_USER
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = \
-    f'postgresql+psycopg2://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{POSTGRESQL_HOST}/{POSTGRESQL_DB}'
+from settings import app
 
 db = SQLAlchemy(app)
 
