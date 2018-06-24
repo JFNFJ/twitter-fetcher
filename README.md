@@ -56,6 +56,10 @@ Basico
 * POSTGRESQL_PASSWORD (ejemplo `postgres`)
 * POSTGRESQL_PORT (ejemplo `5432`)
 
+### pytest
+
+* Correr `pytest test`
+
 ### Redis
 
 Cuando se le pega al endpoint `/track?topic="Salud"` se empieza a publicar en un canal `twitter:salud:stream` 
@@ -69,6 +73,7 @@ asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream
 * [Python](https://docs.python.org/3/)
 * [Redis](https://redis.io/documentation)
 * [Twitter](https://developer.twitter.com/en/docs)
+* [pytest](https://docs.pytest.org/en/latest/)
 
 ### Packages
 
