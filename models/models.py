@@ -28,8 +28,8 @@ class Topic(db.Model):
 
     user = db.relationship("User", back_populates="topics")
     general_result = db.relationship("GeneralResult", uselist=False, backref="topic", cascade="all,delete")
-    evolution_results = db.relationship("EvolutionResult", uselist=False, backref="topic", cascade="all,delete")
-    location_results = db.relationship("LocationResult", uselist=False, backref="topic", cascade="all,delete")
+    evolution_results = db.relationship("EvolutionResult", back_populates="topic", cascade="all,delete")
+    location_results = db.relationship("LocationResult", back_populates="topic", cascade="all,delete")
 
     def __repr__(self):
         return f"<Topic(name='{self.name}', deadline='{self.deadline}', owner='{self.user_id}')>"
@@ -57,6 +57,8 @@ class EvolutionResult(db.Model):
     negative = db.Column(db.Integer)
     neutral = db.Column(db.Integer)
 
+    topic = db.relationship("Topic", back_populates="evolution_results")
+
     def __repr__(self):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', day='{self.day}')>"
@@ -70,6 +72,8 @@ class LocationResult(db.Model):
     positive = db.Column(db.Integer)
     negative = db.Column(db.Integer)
     neutral = db.Column(db.Integer)
+
+    topic = db.relationship("Topic", back_populates="location_results")
 
     def __repr__(self):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
