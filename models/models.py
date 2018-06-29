@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from settings import app
+from passlib.hash import bcrypt
 
 db = SQLAlchemy(app)
 
@@ -8,9 +9,17 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String)
-    email = db.Column(db.String)
-    password = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False)
+    password = db.Column(db.String, nullable=False)
+
+    def __init__(self, name, password, email):
+        self.name = name
+        self.password = bcrypt.encrypt(password)
+        self.email = email
+
+    def validate_password(self, password):
+        return bcrypt.verify(password, self.password)
 
     topics = db.relationship("Topic", back_populates="user", cascade="all,delete")
 
