@@ -2,28 +2,29 @@ from flask import Flask, request
 from multiprocessing import Process
 from TwitterFetcher import TwitterFetcher
 import os
+import json
 import signal
 import datetime
 from settings import app
 
 
-@app.route("/track", methods=['GET'])
+@app.route("/track", methods=['POST'])
 def track():
-    topic = request.args.get('topic')
-    end = request.args.get('end') or datetime.date.today()
-    lang = request.args.get('lang')
-    app.logger.debug("Topic: %s\tEnding: %s\tLang: %s", topic, end, lang)
-    p = init_process(target=start_fetching, args=(topic, end, lang))
-    app.logger.debug("Process: %s", p.pid)
-    return str(f'Topic: {topic} Ending: {end} Fetch: {p.pid}')
+    req = request.get_json(force=True)
+    app.logger.debug("Request: %s", req)
+    p = init_process(target=start_fetching, args=(req["topic"], req["end"], req["lang"]))
+    response = {"topic": req["topic"], "end": req["end"], "lang": req["lang"], "process": p.pid}
+    app.logger.debug("Response: %s", response)
+    return json.dumps(response)
 
 
-@app.route("/finish", methods=['GET'])
+@app.route("/finish", methods=['POST'])
 def finish():
-    pid = int(request.args.get('process'))
-    app.logger.debug("Process: %d", pid)
-    os.kill(pid, signal.SIGTERM)
-    return str(f'Finished: {pid}')
+    req = request.get_json(force=True)
+    app.logger.debug("Process: %s", req)
+    os.kill(req["process"], signal.SIGTERM)
+    response = {"process": req["process"], "status": "killed"}
+    return json.dumps(response)
 
 
 def start_fetching(topic, end=datetime.date.today(), lang='es'):
