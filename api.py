@@ -8,7 +8,7 @@ import datetime
 from settings import app
 
 
-@app.route("/track", methods=['POST'])
+@app.route("/start_thread", methods=['POST'])
 def track():
     req = request.get_json(force=True)
     app.logger.debug("Request: %s", req)
@@ -18,13 +18,45 @@ def track():
     return json.dumps(response)
 
 
-@app.route("/finish", methods=['POST'])
+@app.route("/finish_thread", methods=['POST'])
 def finish():
     req = request.get_json(force=True)
-    app.logger.debug("Process: %s", req)
+    app.logger.debug("Request: %s", req)
     os.kill(req["process"], signal.SIGTERM)
     response = {"process": req["process"], "status": "killed"}
     return json.dumps(response)
+
+
+@app.route("/sign_up", methods=['POST'])
+def sign_up():
+    req = request.get_json(force=True)
+    app.logger.debug("Request: %s", req)
+    # TODO
+    return str("Sign up")
+
+
+@app.route("/login", methods=['POST'])
+def login():
+    req = request.get_json(force=True)
+    app.logger.debug("Request: %s", req)
+    # TODO
+    return str("Login")
+
+
+@app.route("/log_out", methods=['POST'])
+def log_out():
+    req = request.get_json(force=True)
+    app.logger.debug("Request: %s", req)
+    # TODO
+    return str("Log out")
+
+
+@app.route("/topic/<topic_id>/results", methods=['POST'])
+def get_results(topic_id):
+    req = request.get_json(force=True)
+    app.logger.debug("Topic: %s,\tRequest: %s", topic_id, req)
+    # TODO
+    return str(f"Results {topic_id}")
 
 
 def start_fetching(topic, end=datetime.date.today(), lang='es'):
