@@ -1,11 +1,14 @@
-from flask import Flask, request
-from multiprocessing import Process
-from TwitterFetcher import TwitterFetcher
 import os
 import json
 import signal
 import datetime
+from flask import request
+from multiprocessing import Process
+from TwitterFetcher import TwitterFetcher
 from settings import app
+from oauth import default_provider
+
+oauth = default_provider(app)
 
 
 @app.route("/start_thread", methods=['POST'])
@@ -72,4 +75,5 @@ def init_process(target, args):
 
 
 if __name__ == '__main__':
+
     app.run(debug=True, host='0.0.0.0')
