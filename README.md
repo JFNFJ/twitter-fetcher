@@ -83,3 +83,4 @@ asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream
 * [SQLAlchemy](http://docs.sqlalchemy.org/en/latest/)
 * [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
 * [pytest](https://docs.pytest.org/en/latest/)
+* [Bot-O-Meter](https://github.com/IUNetSci/botometer-python)
