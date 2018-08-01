@@ -8,6 +8,7 @@ from geotext import GeoText
 import json
 import time
 from redis import StrictRedis
+from BotMeter import BotMeter
 from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT
 
 PAGE_SIZE = 100
@@ -31,6 +32,7 @@ class TwitterFetcher(StreamListener):
         self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
         self.twitter = Twitter(auth=OAuth(ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
+        self.bom = BotMeter()
         self.topic = topic
 
     def on_data(self, data):
@@ -155,11 +157,14 @@ class TwitterFetcher(StreamListener):
         @param tweet: Raw tweet object
         @return: Filtered tweet
         """
-        filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
-        filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
-        filtered_data["CC"] = self._get_location(tweet["user"]["location"])
-        self.redis.publish(f'twitter:{self.topic}:stream', filtered_data)
-        return filtered_data
+        if not self.bom.is_bot(tweet["user"]["id"]):
+            filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
+            filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
+            filtered_data["CC"] = self._get_location(tweet["user"]["location"])
+            self.redis.publish(f'twitter:{self.topic}:stream', filtered_data)
+            return filtered_data
+        else:
+            print("Detectado Bot: " + tweet["user"]["screen_name"])
 
     @staticmethod
     def _get_location(location):

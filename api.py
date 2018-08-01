@@ -7,6 +7,7 @@ from multiprocessing import Process
 from TwitterFetcher import TwitterFetcher
 from settings import app
 from oauth import default_provider
+from models.models import User
 
 oauth = default_provider(app)
 
@@ -34,8 +35,9 @@ def finish():
 def sign_up():
     req = request.get_json(force=True)
     app.logger.debug("Request: %s", req)
-    # TODO
-    return str("Sign up")
+    user = User.create_user(req)
+    app.logger.debug("User: %s", user)
+    return str(f"Sign up {req} {url}")
 
 
 @app.route("/login", methods=['POST'])
@@ -75,5 +77,4 @@ def init_process(target, args):
 
 
 if __name__ == '__main__':
-
     app.run(debug=True, host='0.0.0.0')

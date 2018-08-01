@@ -12,11 +12,24 @@ class User(db.Model):
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
+    confirmed = db.Column(db.Boolean, nullable=False, default=False)
 
     def __init__(self, name, password, email):
         self.name = name
         self.password = bcrypt.encrypt(password)
         self.email = email
+
+    @staticmethod
+    def create_user(req):
+        user = User(name=req["name"], email=req["email"], password=req["password"])
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    def activate(self):
+        self.confirmed = True
+        db.session.add(self)
+        db.session.commit()
 
     def validate_password(self, password):
         return bcrypt.verify(password, self.password)

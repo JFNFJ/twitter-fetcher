@@ -27,6 +27,12 @@ class TestModels(TestCase):
         self.session.commit()
         assert len(User.query.all()) == 1
 
+    def test_user_activation(self):
+        self._instantiate_user()
+        magic = User.query.filter(User.name == "magic eight ball").one()
+        magic.activate()
+        assert magic.confirmed is True
+
     def test_user_password_validation(self):
         self._instantiate_user()
         magic = User.query.filter(User.name == "magic eight ball").one()
