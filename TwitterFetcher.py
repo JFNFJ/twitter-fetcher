@@ -161,7 +161,8 @@ class TwitterFetcher(StreamListener):
             filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
             filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
             filtered_data["CC"] = self._get_location(tweet["user"]["location"])
-            self.redis.publish(f'twitter:{self.topic}:stream', filtered_data)
+            filtered_data["topic"] = self.topic
+            self.redis.publish(f'twitter:stream', filtered_data)
             return filtered_data
         else:
             print("Detectado Bot: " + tweet["user"]["screen_name"])

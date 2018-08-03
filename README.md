@@ -62,8 +62,9 @@ Basico
 
 ### Redis
 
-Cuando se le pega al endpoint `/track?topic="Salud"` se empieza a publicar en un canal `twitter:salud:stream` 
-asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:salud:stream` 
+Cuando se le pega al endpoint `/track?topic="Salud"` se empieza a publicar en un canal `twitter:stream` 
+asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:stream`. Todos los fetchers terminan 
+publicando en el mismo stream. 
  
 ## Documentacion
 
