@@ -1,5 +1,6 @@
 #!bin/python
 from tweepy.streaming import StreamListener
+from tweepy import API
 from tweepy import OAuthHandler
 from tweepy import Stream
 from twitter import Twitter, OAuth
@@ -18,8 +19,10 @@ class TwitterFetcher(StreamListener):
     """
     Fields to filter from tweet and user objects
     """
-    tweet_fields = ["id", "text", "created_at", "geo", "coordinates", "place"]
+    tweet_fields = ["id", "full_text", "created_at", "geo", "coordinates", "place"]
     user_fields = ["id", "name", "location"]
+    #tweet_fields = ["full_text"]
+    #user_fields = []
 
     def __init__(self, topic=""):
         """
@@ -32,6 +35,7 @@ class TwitterFetcher(StreamListener):
         self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
         self.twitter = Twitter(auth=OAuth(ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
+        #self.twitter = API(self.auth)
         self.bom = BotMeter()
         self.topic = topic
 
@@ -84,7 +88,7 @@ class TwitterFetcher(StreamListener):
         stream.filter(follow, track, async, locations, stall_warnings,
                       languages, encoding, filter_level)
 
-    def search(self, query, count=100, lang='es', max_id=None):
+    def search(self, query, count=1000, lang='es', max_id=None):
         """
         Searches for tweets matching query and other filter parameters
 
@@ -98,7 +102,8 @@ class TwitterFetcher(StreamListener):
         pages = count // PAGE_SIZE
         last_page = count % PAGE_SIZE
         query = {'q': query, 'count': PAGE_SIZE, 'lang': lang, 'max_id': max_id}
-        return self._search(query, pages, last_page)
+        self._search(query, pages, last_page)
+        return None
 
     def _search(self, query, pages, last_page):
         """
@@ -114,7 +119,9 @@ class TwitterFetcher(StreamListener):
         for i in range(0, pages):
             result = self._search_and_extend(query, tweets)
             query = self._next(result['search_metadata'])
-        if last_page != 0:
+            if query is None:
+                break
+        if last_page != 0 and query is not None:
             query['count'] = last_page
             self._search_and_extend(query, tweets)
         return [self._filter_tweet(tweet) for tweet in tweets]
@@ -129,7 +136,7 @@ class TwitterFetcher(StreamListener):
         @return: The Result of the search
         """
         result = self.twitter.search.tweets(q=query['q'], count=query['count'],
-                                            lang=query['lang'], max_id=query['max_id'])
+                                            lang=query['lang'], max_id=query['max_id'], tweet_mode="extended")
         tweets.extend(result['statuses'])
         return result
 
@@ -141,13 +148,14 @@ class TwitterFetcher(StreamListener):
         @param metadata: Metadata of previous search
         @return: Dictionary with a query for the next page of tweets
         """
-        params = metadata['next_results'].split('&')
-        query = {}
-        for p in params:
-            p = p.replace('?', '')
-            key, value = p.split('=')
-            query[key] = value
-        return query
+        if "next_results" in metadata.keys():
+            params = metadata['next_results'].split('&')
+            query = {}
+            for p in params:
+                p = p.replace('?', '')
+                key, value = p.split('=')
+                query[key] = value
+            return query
 
     def _filter_tweet(self, tweet):
         """
@@ -157,15 +165,19 @@ class TwitterFetcher(StreamListener):
         @param tweet: Raw tweet object
         @return: Filtered tweet
         """
-        if not self.bom.is_bot(tweet["user"]["id"]):
-            filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
-            filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
-            filtered_data["CC"] = self._get_location(tweet["user"]["location"])
-            filtered_data["topic"] = self.topic
-            self.redis.publish(f'twitter:stream', filtered_data)
-            return filtered_data
-        else:
-            print("Detectado Bot: " + tweet["user"]["screen_name"])
+        # Este if es para consultar al bot o meter, comentado porque demora mucho
+        #if not self.bom.is_bot(tweet["user"]["id"]):
+        filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
+        filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
+        filtered_data["CC"] = self._get_location(tweet["user"]["location"])
+        filtered_data["topic"] = self.topic
+        self.redis.publish(f'twitter:stream', filtered_data)
+        # Guardar el texto del tweet en un archivo
+        # with open(f"{self.topic}.txt", "a") as myfile:
+        #    myfile.write(filtered_data["full_text"] + ";")
+        return filtered_data["full_text"]
+        #else:
+            #print("Detectado Bot: " + tweet["user"]["screen_name"])
 
     @staticmethod
     def _get_location(location):
