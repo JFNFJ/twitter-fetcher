@@ -31,8 +31,9 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def validate_password(self, password):
-        return bcrypt.verify(password, self.password)
+    @staticmethod
+    def validate_password(user, password):
+        return bcrypt.verify(password, user.password)
 
     topics = db.relationship("Topic", back_populates="user", cascade="all,delete")
 
