@@ -9,3 +9,6 @@ pip-selfcheck.json
 */.pytest_cache/
 spanish/
 english/
+.Python
+include/
+venv/
