@@ -8,7 +8,7 @@ from multiprocessing import Process
 from TwitterFetcher import TwitterFetcher
 from settings import app
 from oauth import default_provider
-from models.models import User
+from models.models import User, Topic
 from flask_sqlalchemy import SQLAlchemy
 
 oauth = default_provider(app)
@@ -71,22 +71,39 @@ def login():
 
 def generateToken(user):
     expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=EXPIRATION_HOURS)
-    token = jwt.encode({'name': user.name, 'exp': expiration_date}, app.secret_key, algorithm='HS256')
+    token = jwt.encode({'user_id': user.id, 'exp': expiration_date}, app.secret_key, algorithm='HS256')
     return expiration_date, token
 
 
+@app.route("/topics", methods=["GET"])
+def get_topics():
+    token, error = validateToken(request.headers)
+    if error:
+        return error
+    app.logger.debug("Token: %s", token)
+    topics = Topic.query.filter_by(user_id=token['user_id']).all()
+    return json.dumps(topics)
+
 @app.route("/topics/<topic_id>/results", methods=['GET'])
 def get_results(topic_id):
-    token = request.headers.get('token')
-    if not token:
-        return 'Token missing', 400
-
-    token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-    if datetime.datetime.utcfromtimestamp(token['exp']) < datetime.datetime.utcnow():
-        return 'Expired token', 401
+    token, error = validateToken(request.headers)
+    if error:
+        return error
     app.logger.debug("Topic: %s", topic_id)
     # TODO
     return str(f"Results {topic_id}")
+
+
+def validateToken(headers):
+    token = headers.get('token')
+    if not token:
+        return None, ('Token missing', 400)
+
+    token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+    if datetime.datetime.utcfromtimestamp(token['exp']) < datetime.datetime.utcnow():
+        return None, ('Expired token', 401)
+
+    return token, None
 
 
 def start_fetching(topic, end=datetime.date.today(), lang='es'):
