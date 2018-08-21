@@ -1,15 +1,17 @@
-import os
-import json
-import signal
 import datetime
+import json
+import os
+import signal
+from multiprocessing import Process
+
 import jwt
 from flask import request
-from multiprocessing import Process
-from TwitterFetcher import TwitterFetcher
-from settings import app
-from oauth import default_provider
-from models.models import User
 from flask_sqlalchemy import SQLAlchemy
+
+from TwitterFetcher import TwitterFetcher
+from models.models import User, Topic
+from oauth import default_provider
+from settings import app
 
 oauth = default_provider(app)
 db = SQLAlchemy(app)
@@ -71,22 +73,52 @@ def login():
 
 def generateToken(user):
     expiration_date = datetime.datetime.utcnow() + datetime.timedelta(hours=EXPIRATION_HOURS)
-    token = jwt.encode({'name': user.name, 'exp': expiration_date}, app.secret_key, algorithm='HS256')
+    token = jwt.encode({'user_id': user.id, 'exp': expiration_date}, app.secret_key, algorithm='HS256')
     return expiration_date, token
+
+
+@app.route("/topics", methods=["GET"])
+def get_topics():
+    token, error = validate_token(request.headers)
+    if error:
+        return error
+    app.logger.debug("Token: %s", token)
+    topics = Topic.query.filter_by(user_id=token['user_id']).all()
+    return json.dumps([topic.to_dict() for topic in topics])
+
+
+@app.route("/topics", methods=["POST"])
+def create_topic():
+    token, error = validate_token(request.headers)
+    if error:
+        return error
+    req = request.get_json(force=True)
+    app.logger.debug("Token: %s, request: %s", token, req)
+    req['deadline'] = datetime.datetime.strptime(req['deadline'], "%d-%m-%Y").date()
+    topic = Topic.create(token['user_id'], req['name'], req['deadline'])
+    return json.dumps(topic.to_dict())
 
 
 @app.route("/topics/<topic_id>/results", methods=['GET'])
 def get_results(topic_id):
-    token = request.headers.get('token')
-    if not token:
-        return 'Token missing', 400
-
-    token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-    if datetime.datetime.utcfromtimestamp(token['exp']) < datetime.datetime.utcnow():
-        return 'Expired token', 401
+    token, error = validate_token(request.headers)
+    if error:
+        return error
     app.logger.debug("Topic: %s", topic_id)
     # TODO
     return str(f"Results {topic_id}")
+
+
+def validate_token(headers):
+    token = headers.get('token')
+    if not token:
+        return None, ('Token missing', 400)
+
+    token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+    if datetime.datetime.utcfromtimestamp(token['exp']) < datetime.datetime.utcnow():
+        return None, ('Expired token', 401)
+
+    return token, None
 
 
 def start_fetching(topic, end=datetime.date.today(), lang='es'):

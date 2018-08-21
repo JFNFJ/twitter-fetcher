@@ -57,6 +57,17 @@ class Topic(db.Model):
     def __repr__(self):
         return f"<Topic(name='{self.name}', deadline='{self.deadline}', owner='{self.user_id}')>"
 
+    @staticmethod
+    def create(user_id, name, deadline):
+        topic = Topic(user_id=user_id, name=name, deadline=deadline)
+        db.session.add(topic)
+        db.session.commit()
+        return topic
+
+    def to_dict(self):
+        return {'id': self.id, 'name': self.name, 'user_id': self.user_id,
+                'deadline': self.deadline.strftime('%d-%m-%Y')}
+
 
 class GeneralResult(db.Model):
     __tablename__ = "general_results"
@@ -101,6 +112,7 @@ class LocationResult(db.Model):
     def __repr__(self):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', location='{self.location}')>"
+
 
 # OAuth Models
 
