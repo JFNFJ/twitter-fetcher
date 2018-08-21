@@ -26,3 +26,4 @@ MASHAPE_KEY = os.getenv("MASHAPE_TEST_KEY")
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     f'postgresql+psycopg2://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{POSTGRESQL_HOST}/{POSTGRESQL_DB}'
+app.secret_key = os.getenv("SECRET_KEY")

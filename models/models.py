@@ -9,7 +9,7 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=False, unique=True)
     email = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
@@ -20,8 +20,8 @@ class User(db.Model):
         self.email = email
 
     @staticmethod
-    def create_user(req):
-        user = User(name=req["name"], email=req["email"], password=req["password"])
+    def create_user(name, email, password):
+        user = User(name=name, email=email, password=password)
         db.session.add(user)
         db.session.commit()
         return user
@@ -31,8 +31,9 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def validate_password(self, password):
-        return bcrypt.verify(password, self.password)
+    @staticmethod
+    def validate_password(user, password):
+        return bcrypt.verify(password, user.password)
 
     topics = db.relationship("Topic", back_populates="user", cascade="all,delete")
 
