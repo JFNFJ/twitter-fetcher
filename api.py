@@ -10,7 +10,6 @@ from settings import app
 from oauth import default_provider
 from models.models import User
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import jwt_required
 
 oauth = default_provider(app)
 db = SQLAlchemy(app)
@@ -40,9 +39,15 @@ def finish():
 def sign_up():
     req = request.get_json(force=True)
     app.logger.debug("Request: %s", req)
+    user = User.query.filter_by(name=req["name"]).first()
+    if user:
+        return json.dumps({'error': 'Usuario existente', 'code': 400}), 400
+
     user = User.create_user(req['name'], req['email'], req['password'])
+    expiration_date, token = generateToken(user)
     app.logger.debug("User: %s", user)
-    return str(f"Sign up {req} {url}")
+    return json.dumps(
+        {'name': user.name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
 
 
 @app.route("/login", methods=['POST'])
@@ -61,7 +66,7 @@ def login():
     expiration_date, token = generateToken(user)
 
     return json.dumps(
-        {'name': name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
+        {'name': user.name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
 
 
 def generateToken(user):
