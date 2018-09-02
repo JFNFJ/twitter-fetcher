@@ -18,6 +18,10 @@ db = SQLAlchemy(app)
 EXPIRATION_HOURS = 24
 
 
+@app.route("/ping", methods=['GET'])
+def ping():
+    return "pong"
+
 @app.route("/start_thread", methods=['POST'])
 def track():
     req = request.get_json(force=True)
@@ -134,4 +138,4 @@ def init_process(target, args):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', threaded=True)
