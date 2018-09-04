@@ -12,8 +12,10 @@ from TwitterFetcher import TwitterFetcher
 from models.models import User, Topic
 from oauth import default_provider
 from settings import app
+from models.models import db
 
 oauth = default_provider(app)
+db.create_all()
 db = SQLAlchemy(app)
 EXPIRATION_HOURS = 24
 
