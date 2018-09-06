@@ -19,7 +19,7 @@ class TwitterFetcher(StreamListener):
     """
     Fields to filter from tweet and user objects
     """
-    tweet_fields = ["id", "full_text", "created_at", "geo", "coordinates", "place"]
+    tweet_fields = ["id", "full_text", "text", "created_at", "geo", "coordinates", "place", "lang", "extended"]
     user_fields = ["id", "name", "location"]
     #tweet_fields = ["full_text"]
     #user_fields = []
@@ -88,7 +88,7 @@ class TwitterFetcher(StreamListener):
         stream.filter(follow, track, async, locations, stall_warnings,
                       languages, encoding, filter_level)
 
-    def search(self, query, count=1000, lang='es', max_id=None):
+    def search(self, query, count=100, lang='es', max_id=None):
         """
         Searches for tweets matching query and other filter parameters
 
@@ -167,15 +167,26 @@ class TwitterFetcher(StreamListener):
         """
         # Este if es para consultar al bot o meter, comentado porque demora mucho
         #if not self.bom.is_bot(tweet["user"]["id"]):
+        tweet["extended"] = False
+
+        if "extended_tweet" in tweet.keys():
+            tweet["full_text"] = tweet["extended_tweet"]["full_text"]
+            tweet["extended"] = True
+        elif "retweeted_status" in tweet.keys():
+            if "full_text" in tweet["retweeted_status"].keys():
+                tweet["full_text"] = "RT " + tweet["retweeted_status"]["full_text"]
+                tweet["extended"] = True
+
         filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["topic"] = self.topic
         self.redis.publish(f'twitter:stream', filtered_data)
+        return filtered_data
         # Guardar el texto del tweet en un archivo
-        # with open(f"{self.topic}.txt", "a") as myfile:
-        #    myfile.write(filtered_data["full_text"] + ";")
-        return filtered_data["full_text"]
+        #with open(f"{self.topic}.csv", "a") as myfile:
+        #    myfile.write(filtered_data["full_text"].replace("\n", " ") + "¶\n")
+        #    return filtered_data["full_text"]
         #else:
             #print("Detectado Bot: " + tweet["user"]["screen_name"])
 
