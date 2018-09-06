@@ -1,0 +1,46 @@
+version: '3'
+services:
+  app:
+    image: proyecto-api
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RHOST=redis
+    ports:
+      - 1337:80
+    networks:
+      - redis-net
+      - postgres-net
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    networks:
+      - redis-net
+    volumes:
+      - redis-data:/data
+
+  postgres:
+    image: postgres:9.4
+    ports:
+      - 5431:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: proyecto
+    networks:
+      - postgres-net
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+
+networks:
+  redis-net:
+  postgres-net:
+
+volumes:
+  redis-data:

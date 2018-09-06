@@ -65,7 +65,17 @@ Basico
 Cuando se le pega al endpoint `/track?topic="Salud"` se empieza a publicar en un canal `twitter:stream` 
 asi que recomiendo levantar un `redis-cli` y suscribirlo a `twitter:stream`. Todos los fetchers terminan 
 publicando en el mismo stream. 
+
+#### Docker & redis 
+```bash
+docker run -d -p 6379:6379 --name redis redis:latest
+docker start redis
+docker port redis # debería devolver los puertos expuestos por el container (6379)
+docker run -it --link redis:redis --rm redis redis-cli -h redis -p 6379 # Levanta un redis-cli
+docker stop redis
+```
  
+
 ## Documentacion
 
 ### General
