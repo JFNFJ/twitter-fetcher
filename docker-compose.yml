@@ -3,31 +3,21 @@ services:
   app:
     image: proyecto-api
     restart: always
-    environment:
-      - NODE_ENV=production
-      - RHOST=redis
     ports:
-      - 1337:80
+      - 80:80
     networks:
-      - redis-net
       - postgres-net
-    depends_on:
-      - redis
-      - postgres
-
-  redis:
-    image: redis:latest
-    command: ["redis-server", "--appendonly", "yes"]
-    hostname: redis
-    networks:
       - redis-net
-    volumes:
-      - redis-data:/data
+    depends_on:
+      - postgres
+    external_links:
+      - redis:redis
 
   postgres:
     image: postgres:9.4
+    restart: always
     ports:
-      - 5431:5432
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -37,10 +27,7 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-
 networks:
-  redis-net:
   postgres-net:
-
-volumes:
-  redis-data:
+  redis-net:
+    external: true

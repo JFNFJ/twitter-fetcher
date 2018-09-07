@@ -12,8 +12,3 @@ RUN pip3 install --trusted-host pypi.python.org uwsgi
 COPY ./nginx.conf /etc/nginx/sites-enabled/default
 
 CMD service nginx start && uwsgi -s /tmp/uwsgi.sock --chmod-socket=666 --manage-script-name --mount /=api:app
-
-# docker build -t proyecto-api .
-# docker rm proyecto-api
-# docker run -d -p 1337:80 --name proyecto-api proyecto-api
-# docker start proyecto-api
