@@ -7,6 +7,7 @@ from multiprocessing import Process
 import jwt
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS, cross_origin
 
 from TwitterFetcher import TwitterFetcher
 from models.models import User, Topic
@@ -15,6 +16,8 @@ from settings import app
 from models.models import db
 
 oauth = default_provider(app)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 db.create_all()
 db = SQLAlchemy(app)
 EXPIRATION_HOURS = 24
@@ -61,6 +64,7 @@ def sign_up():
 
 
 @app.route("/api/login", methods=['POST'])
+@cross_origin()
 def login():
     req = request.get_json(force=True)
     name = req["name"]
