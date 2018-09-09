@@ -8,26 +8,12 @@ services:
     networks:
       - postgres-net
       - redis-net
-    depends_on:
-      - postgres
     external_links:
       - redis:redis
-
-  postgres:
-    image: postgres:9.4
-    restart: always
-    ports:
-      - 127.0.0.1:5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: proyecto
-    networks:
-      - postgres-net
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres:posgres
 
 networks:
   postgres-net:
+    external: true
   redis-net:
     external: true
