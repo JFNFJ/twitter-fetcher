@@ -6,6 +6,7 @@ from tweepy import Stream
 from twitter import Twitter, OAuth
 from geotext import GeoText
 
+import datetime
 import json
 import time
 from redis import StrictRedis
@@ -31,6 +32,7 @@ class TwitterFetcher(StreamListener):
         @param self:
         @return: None
         """
+        self.total_streamed = 0
         self.redis = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
         self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
@@ -38,6 +40,7 @@ class TwitterFetcher(StreamListener):
         #self.twitter = API(self.auth)
         self.bom = BotMeter()
         self.topic = topic
+        self.started_at = ""
 
     def on_data(self, data):
         """
@@ -47,10 +50,13 @@ class TwitterFetcher(StreamListener):
         @param data: Data received from Twitter Stream
         @return: True
         """
+        self.total_streamed += 1
+        with open(f"{self.topic}.tweets", "w") as myfile:
+            current_time = datetime.datetime.now()
+            myfile.write(f"Started: {self.started_at}\t Current: {current_time}\t Tweets: {self.total_streamed}\n")
         tweet = json.loads(data)
 
         if 'limit' in tweet.keys():
-            time.sleep(tweet['limit']['track'])
             return True
         else:
             filtered_tweet = self._filter_tweet(tweet)
@@ -83,6 +89,7 @@ class TwitterFetcher(StreamListener):
         @param filter_level: Dont remember
         @return: None
         """
+        self.started_at = datetime.datetime.now()
         self.topic = track.lower()
         stream = Stream(self.auth, self)
         stream.filter(follow, track, async, locations, stall_warnings,
