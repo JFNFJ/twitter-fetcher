@@ -10,7 +10,7 @@ import json
 import time
 from redis import StrictRedis
 from BotMeter import BotMeter
-from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT
+from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT, app
 
 PAGE_SIZE = 100
 
@@ -64,7 +64,7 @@ class TwitterFetcher(StreamListener):
         @param status: Status received from Twitter Stream stating the error
         @return: None
         """
-        print(status)
+        app.logger.error(status)
 
     def stream(self, track, follow=None, async=False, locations=None,
                stall_warnings=False, languages=['es'], encoding='utf8', filter_level=None):
