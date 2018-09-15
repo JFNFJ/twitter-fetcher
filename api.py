@@ -10,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 
 from TwitterFetcher import TwitterFetcher
+from Threader import Threader
 from models.models import User, Topic
 from oauth import default_provider
 from settings import app
@@ -21,22 +22,26 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 db.create_all()
 db = SQLAlchemy(app)
 EXPIRATION_HOURS = 24
+threader = Threader()
 
 
 @app.route("/api/ping", methods=['GET'])
 def ping():
     return "pong"
 
+
 @app.route("/api/start_thread", methods=['POST'])
 def track():
+    token, error = validate_token(request.headers)
+    if error:
+        return error
     req = request.get_json(force=True)
-    app.logger.debug("Request: %s", req)
-    print("Spawining process")
-    p = init_process(target=start_fetching, args=(req["topic"], req["end"], req["lang"]))
-    print("Running process")
-    response = {"topic": req["topic"], "end": req["end"], "lang": req["lang"], "process": p.pid}
-    app.logger.debug("Response: %s", response)
-    return json.dumps(response)
+    app.logger.debug("Token: %s, request: %s", token, req)
+    req['deadline'] = datetime.datetime.strptime(req['deadline'], "%d-%m-%Y").date()
+    topic = Topic.create(token['user_id'], req['name'], req['deadline'], req['language'])
+    p = init_process(target=start_fetching, args=(req["name"], req["deadline"], req["language"]))
+    threader.add_thread(token["user_id"], {"process": p.pid, "topic": topic.to_dict()})
+    return json.dumps(topic.to_dict())
 
 
 @app.route("/api/finish_thread", methods=['POST'])
@@ -121,6 +126,9 @@ def get_results(topic_id):
     return str(f"Results {topic_id}")
 
 
+# Auxiliar
+
+
 def validate_token(headers):
     token = headers.get('token')
     if not token:
@@ -133,8 +141,8 @@ def validate_token(headers):
     return token, None
 
 
-def start_fetching(topic, end=datetime.date.today(), lang='es'):
-    twitter_fetcher = TwitterFetcher()
+def start_fetching(topic, deadline=datetime.date.today(), lang='es'):
+    twitter_fetcher = TwitterFetcher(deadline)
     twitter_fetcher.stream(topic, languages=[lang])
 
 

@@ -48,6 +48,7 @@ class Topic(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     name = db.Column(db.String)
     deadline = db.Column(db.Date)
+    language = db.Column(db.String)
 
     user = db.relationship("User", back_populates="topics")
     general_result = db.relationship("GeneralResult", uselist=False, backref="topic", cascade="all,delete")
@@ -55,18 +56,19 @@ class Topic(db.Model):
     location_results = db.relationship("LocationResult", back_populates="topic", cascade="all,delete")
 
     def __repr__(self):
-        return f"<Topic(name='{self.name}', deadline='{self.deadline}', owner='{self.user_id}')>"
+        return f"<Topic(name='{self.name}', deadline='{self.deadline}', " \
+               f"owner='{self.user_id}', language='{self.language})>"
 
     @staticmethod
-    def create(user_id, name, deadline):
-        topic = Topic(user_id=user_id, name=name, deadline=deadline)
+    def create(user_id, name, deadline, lang):
+        topic = Topic(user_id=user_id, name=name, deadline=deadline, language=lang)
         db.session.add(topic)
         db.session.commit()
         return topic
 
     def to_dict(self):
         return {'id': self.id, 'name': self.name, 'user_id': self.user_id,
-                'deadline': self.deadline.strftime('%d-%m-%Y')}
+                'deadline': self.deadline.strftime('%d-%m-%Y'), 'language': self.language}
 
 
 class GeneralResult(db.Model):

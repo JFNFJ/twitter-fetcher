@@ -7,7 +7,7 @@ from twitter import Twitter, OAuth
 from geotext import GeoText
 
 import json
-import time
+import datetime
 from redis import StrictRedis
 from BotMeter import BotMeter
 from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT
@@ -24,7 +24,7 @@ class TwitterFetcher(StreamListener):
     #tweet_fields = ["full_text"]
     #user_fields = []
 
-    def __init__(self, topic=""):
+    def __init__(self, deadline):
         """
         Initialize connections with Redis and Twitter API
 
@@ -37,7 +37,8 @@ class TwitterFetcher(StreamListener):
         self.twitter = Twitter(auth=OAuth(ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
         #self.twitter = API(self.auth)
         self.bom = BotMeter()
-        self.topic = topic
+        self.deadline = deadline
+        self.topic = ""
 
     def on_data(self, data):
         """
@@ -48,6 +49,9 @@ class TwitterFetcher(StreamListener):
         @return: True
         """
         tweet = json.loads(data)
+
+        if datetime.datetime.strptime(tweet.created_at, "%d-%m-%Y").date() > self.deadline:
+            return False
 
         if 'limit' in tweet.keys():
             return True
