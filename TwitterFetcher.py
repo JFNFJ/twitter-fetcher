@@ -10,7 +10,7 @@ import json
 import datetime
 from redis import StrictRedis
 from BotMeter import BotMeter
-from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT
+from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT, app
 
 PAGE_SIZE = 100
 
@@ -68,7 +68,7 @@ class TwitterFetcher(StreamListener):
         @param status: Status received from Twitter Stream stating the error
         @return: None
         """
-        print(status)
+        app.logger.error(status)
 
     def stream(self, track, follow=None, async=False, locations=None,
                stall_warnings=False, languages=['es'], encoding='utf8', filter_level=None):
@@ -184,7 +184,7 @@ class TwitterFetcher(StreamListener):
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["topic"] = self.topic
-        self.redis.publish(f'twitter:stream', filtered_data)
+        self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
         return filtered_data
         # Guardar el texto del tweet en un archivo
         #with open(f"{self.topic}.csv", "a") as myfile:
