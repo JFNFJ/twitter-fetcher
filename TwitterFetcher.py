@@ -173,12 +173,9 @@ class TwitterFetcher(StreamListener):
         tweet["extended"] = False
 
         if "extended_tweet" in tweet.keys():
-            tweet["full_text"] = tweet["extended_tweet"]["full_text"]
-            tweet["extended"] = True
-        elif "retweeted_status" in tweet.keys():
-            if "full_text" in tweet["retweeted_status"].keys():
-                tweet["full_text"] = "RT " + tweet["retweeted_status"]["full_text"]
-                tweet["extended"] = True
+            tweet["text"] = tweet["extended_tweet"]["full_text"]
+        elif "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
+            tweet["text"] = "RT " + tweet["retweeted_status"]["full_text"]
 
         filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
