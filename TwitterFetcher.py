@@ -180,7 +180,7 @@ class TwitterFetcher(StreamListener):
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["topic"] = self.topic
-        self.redis.publish(f'twitter:stream', filtered_data)
+        self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
         return filtered_data
         # Guardar el texto del tweet en un archivo
         #with open(f"{self.topic}.csv", "a") as myfile:
