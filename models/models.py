@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from settings import app
 from passlib.hash import bcrypt
 
+import datetime
+
 db = SQLAlchemy(app)
 
 
@@ -79,6 +81,20 @@ class GeneralResult(db.Model):
     negative = db.Column(db.Integer)
     neutral = db.Column(db.Integer)
 
+    @staticmethod
+    def create(topic_id):
+        result = GeneralResult(topic_id=topic_id, positive=0, negative=0, neutral=0)
+        db.session.add(result)
+        db.session.commit()
+        return result
+
+    @staticmethod
+    def is_in(topic_id):
+        results = GeneralResult.query \
+            .filter(GeneralResult.topic_id == topic_id) \
+            .all()
+        return len(results) > 0
+
     def __repr__(self):
         return f"<GeneralResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}')>"
@@ -94,6 +110,22 @@ class EvolutionResult(db.Model):
     neutral = db.Column(db.Integer)
 
     topic = db.relationship("Topic", back_populates="evolution_results")
+
+    @staticmethod
+    def create(topic_id, day):
+        d = datetime.datetime.strptime(day, "%a %b %d %X %z %Y").date()
+        result = EvolutionResult(topic_id=topic_id, day=d, positive=0, negative=0, neutral=0)
+        db.session.add(result)
+        db.session.commit()
+        return result
+
+    @staticmethod
+    def is_in(topic_id, day):
+        results = EvolutionResult.query\
+            .filter(EvolutionResult.topic_id == topic_id)\
+            .filter(EvolutionResult.day == datetime.datetime.strptime(day, "%a %b %d %X %z %Y").date())\
+            .all()
+        return len(results) > 0
 
     def __repr__(self):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
@@ -111,8 +143,23 @@ class LocationResult(db.Model):
 
     topic = db.relationship("Topic", back_populates="location_results")
 
+    @staticmethod
+    def create(topic_id, location):
+        result = LocationResult(topic_id=topic_id, location=location, positive=0, negative=0, neutral=0)
+        db.session.add(result)
+        db.session.commit()
+        return result
+
+    @staticmethod
+    def is_in(topic_id, location):
+        results = LocationResult.query \
+            .filter(LocationResult.topic_id == topic_id) \
+            .filter(LocationResult.location == location) \
+            .all()
+        return len(results) > 0
+
     def __repr__(self):
-        return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
+        return f"<LocationResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', location='{self.location}')>"
 
 

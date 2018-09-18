@@ -36,7 +36,7 @@ class TestModels(TestCase):
     def test_user_password_validation(self):
         self._instantiate_user()
         magic = User.query.filter(User.name == "magic eight ball").one()
-        assert magic.validate_password("achuras")
+        assert User.validate_password(magic, "achuras")
 
     def test_topic_creation(self):
         magic = self._instantiate_user()
@@ -73,6 +73,28 @@ class TestModels(TestCase):
         assert LocationResult.query.all()[0].topic.name == "Sampaoli"
         assert len(topic_sampa.location_results) == 2
         assert topic_sampa.location_results[0].location == "AR"
+
+    def test_evolution_result_is_in(self):
+        magic = self._instantiate_user()
+        topic_sampa, topic_seleccion = self._instantiate_topic(magic)
+        self._instantiate_evolution_result(topic_sampa)
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%m-%Y")
+        assert EvolutionResult.is_in(topic_sampa.id, yesterday)
+        assert not EvolutionResult.is_in(topic_sampa.id, "16-09-2018")
+
+    def test_location_result_is_in(self):
+        magic = self._instantiate_user()
+        topic_sampa, topic_seleccion = self._instantiate_topic(magic)
+        self._instantiate_location_result(topic_sampa)
+        assert LocationResult.is_in(topic_sampa.id, "AR")
+        assert not LocationResult.is_in(topic_sampa.id, "BO")
+
+    def test_general_result_is_in(self):
+        magic = self._instantiate_user()
+        topic_sampa, topic_seleccion = self._instantiate_topic(magic)
+        self._instantiate_general_result(topic_sampa)
+        assert GeneralResult.is_in(topic_sampa.id)
+        assert not GeneralResult.is_in(12342452)
 
     def _instantiate_user(self):
         magic = User(name="magic eight ball", email="eighty@fatmail.com", password="achuras")

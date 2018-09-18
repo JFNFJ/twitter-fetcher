@@ -6,10 +6,12 @@ from tweepy import Stream
 from twitter import Twitter, OAuth
 from geotext import GeoText
 
+import time
 import json
 import datetime
 from redis import StrictRedis
 from BotMeter import BotMeter
+from models.models import GeneralResult, LocationResult, EvolutionResult
 from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT, app
 
 PAGE_SIZE = 100
@@ -24,7 +26,7 @@ class TwitterFetcher(StreamListener):
     #tweet_fields = ["full_text"]
     #user_fields = []
 
-    def __init__(self, deadline):
+    def __init__(self, deadline, topic_id):
         """
         Initialize connections with Redis and Twitter API
 
@@ -39,6 +41,7 @@ class TwitterFetcher(StreamListener):
         self.bom = BotMeter()
         self.deadline = deadline
         self.topic = ""
+        self.topic_id = topic_id
 
     def on_data(self, data):
         """
@@ -49,16 +52,19 @@ class TwitterFetcher(StreamListener):
         @return: True
         """
         tweet = json.loads(data)
-
-        if datetime.datetime.strptime(tweet.created_at, "%d-%m-%Y").date() > self.deadline:
-            return False
+        print(tweet)
 
         if 'limit' in tweet.keys():
             return True
         else:
-            filtered_tweet = self._filter_tweet(tweet)
-            print(json.dumps(filtered_tweet))
-            return True
+            format_date = datetime.datetime.strptime(tweet["created_at"], "%a %b %d %X %z %Y").date()
+            format_deadline = datetime.datetime.strptime(self.deadline, "%d-%m-%Y").date()
+            if time.mktime(format_date.timetuple()) > time.mktime(format_deadline.timetuple()):
+                return False
+            else:
+                filtered_tweet = self._filter_tweet(tweet)
+                print(json.dumps(filtered_tweet))
+                return True
 
     def on_error(self, status):
         """
@@ -168,10 +174,6 @@ class TwitterFetcher(StreamListener):
         @param tweet: Raw tweet object
         @return: Filtered tweet
         """
-        # Este if es para consultar al bot o meter, comentado porque demora mucho
-        #if not self.bom.is_bot(tweet["user"]["id"]):
-        tweet["extended"] = False
-
         if "extended_tweet" in tweet.keys():
             tweet["text"] = tweet["extended_tweet"]["full_text"]
         elif "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
@@ -182,13 +184,8 @@ class TwitterFetcher(StreamListener):
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["topic"] = self.topic
         self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
+        self._initialize_results(filtered_data)
         return filtered_data
-        # Guardar el texto del tweet en un archivo
-        #with open(f"{self.topic}.csv", "a") as myfile:
-        #    myfile.write(filtered_data["full_text"].replace("\n", " ") + "¶\n")
-        #    return filtered_data["full_text"]
-        #else:
-            #print("Detectado Bot: " + tweet["user"]["screen_name"])
 
     @staticmethod
     def _get_location(location):
@@ -214,3 +211,11 @@ class TwitterFetcher(StreamListener):
         @return: Dict with filtered fields of Jason
         """
         return {key: value for key, value in json_fields.items() if key in fields}
+
+    def _initialize_results(self, tweet):
+        if not GeneralResult.is_in(self.topic_id):
+            GeneralResult.create(self.topic_id)
+        if not EvolutionResult.is_in(self.topic_id, tweet["created_at"]):
+            EvolutionResult.create(self.topic_id, tweet["created_at"])
+        if not LocationResult.is_in(self.topic_id, tweet["CC"]):
+            LocationResult.create(self.topic_id, tweet["CC"])
