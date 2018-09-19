@@ -39,7 +39,7 @@ def create_topic():
     app.logger.debug("Token: %s, request: %s", token, req)
     req['deadline'] = datetime.datetime.strptime(req['deadline'], "%d-%m-%Y").date()
     topic = Topic.create(token['user_id'], req['name'], req['deadline'], req['language'])
-    p = init_process(target=start_fetching, args=(req["name"], topic.id, req["deadline"], req["language"]))
+    p = init_process(target=start_fetching, args=(req["name"], topic.id, token['user_id'], req["deadline"], req["language"]))
     threader.add_thread(token["user_id"], {"process": p.pid, "topic": topic.to_dict()})
     return json.dumps(topic.to_dict())
 
@@ -129,8 +129,8 @@ def validate_token(headers):
     return token, None
 
 
-def start_fetching(topic, topic_id, deadline=datetime.date.today(), lang='es'):
-    twitter_fetcher = TwitterFetcher(deadline, topic_id)
+def start_fetching(topic, topic_id, user_id, deadline=datetime.date.today(), lang='es'):
+    twitter_fetcher = TwitterFetcher(deadline, topic_id, user_id)
     twitter_fetcher.stream(topic, languages=[lang])
 
 

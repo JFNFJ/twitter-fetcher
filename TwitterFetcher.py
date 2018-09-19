@@ -26,7 +26,7 @@ class TwitterFetcher(StreamListener):
     #tweet_fields = ["full_text"]
     #user_fields = []
 
-    def __init__(self, deadline, topic_id):
+    def __init__(self, deadline, topic_id, user_id):
         """
         Initialize connections with Redis and Twitter API
 
@@ -42,6 +42,7 @@ class TwitterFetcher(StreamListener):
         self.deadline = deadline
         self.topic = ""
         self.topic_id = topic_id
+        self.user_id = user_id
 
     def on_data(self, data):
         """
@@ -76,7 +77,7 @@ class TwitterFetcher(StreamListener):
         app.logger.error(status)
 
     def stream(self, track, follow=None, async=False, locations=None,
-               stall_warnings=False, languages=['es'], encoding='utf8', filter_level=None):
+               stall_warnings=False, languages=['es'], encoding='utf8', filter_level="none"):
         """
         Starts listener for Twitter Stream with specified parameters
 
@@ -93,8 +94,8 @@ class TwitterFetcher(StreamListener):
         """
         self.topic = track.lower()
         stream = Stream(self.auth, self)
-        stream.filter(follow, track, async, locations, stall_warnings,
-                      languages, encoding, filter_level)
+        stream.filter(follow=follow, track=[track], async=async, locations=locations, stall_warnings=stall_warnings,
+                      languages=languages, encoding=encoding, filter_level=filter_level)
 
     def search(self, query, count=100, lang='es', max_id=None):
         """
@@ -182,6 +183,7 @@ class TwitterFetcher(StreamListener):
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["topic"] = self.topic
+        filtered_data["user_id"] = self.user_id
         self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
         self._initialize_results(filtered_data)
         return filtered_data
