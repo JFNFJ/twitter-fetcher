@@ -58,8 +58,7 @@ class TwitterFetcher(StreamListener):
             return True
         else:
             format_date = datetime.datetime.strptime(tweet["created_at"], "%a %b %d %X %z %Y").date()
-            format_deadline = datetime.datetime.strptime(self.deadline, "%d-%m-%Y").date()
-            if time.mktime(format_date.timetuple()) > time.mktime(format_deadline.timetuple()):
+            if time.mktime(format_date.timetuple()) > time.mktime(self.deadline.timetuple()):
                 return False
             else:
                 filtered_tweet = self._filter_tweet(tweet)

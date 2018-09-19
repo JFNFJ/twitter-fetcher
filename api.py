@@ -30,8 +30,8 @@ def ping():
     return "pong"
 
 
-@app.route("/api/start_thread", methods=['POST'])
-def track():
+@app.route("/api/topics", methods=['POST'])
+def create_topic():
     token, error = validate_token(request.headers)
     if error:
         return error
@@ -44,8 +44,8 @@ def track():
     return json.dumps(topic.to_dict())
 
 
-@app.route("/api/finish_thread", methods=['POST'])
-def finish():
+@app.route("/api/topics", methods=['DELETE'])
+def finish_topic():
     req = request.get_json(force=True)
     app.logger.debug("Request: %s", req)
     os.kill(req["process"], signal.SIGTERM)
@@ -102,18 +102,6 @@ def get_topics():
     app.logger.debug("Token: %s", token)
     topics = Topic.query.filter_by(user_id=token['user_id']).all()
     return json.dumps([topic.to_dict() for topic in topics])
-
-
-@app.route("/api/topics", methods=["POST"])
-def create_topic():
-    token, error = validate_token(request.headers)
-    if error:
-        return error
-    req = request.get_json(force=True)
-    app.logger.debug("Token: %s, request: %s", token, req)
-    req['deadline'] = datetime.datetime.strptime(req['deadline'], "%d-%m-%Y").date()
-    topic = Topic.create(token['user_id'], req['name'], req['deadline'])
-    return json.dumps(topic.to_dict())
 
 
 @app.route("/api/topics/<topic_id>/results", methods=['GET'])
