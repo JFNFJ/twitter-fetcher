@@ -1,5 +1,7 @@
 # twitter-fetcher
 
+![LUL](https://i.kym-cdn.com/photos/images/newsfeed/001/290/930/5c3.jpg)
+
 ## Instalacion
 
 ### Python 3.6
