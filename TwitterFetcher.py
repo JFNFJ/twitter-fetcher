@@ -11,8 +11,9 @@ import json
 import datetime
 from redis import StrictRedis
 from BotMeter import BotMeter
-from models.models import GeneralResult, LocationResult, EvolutionResult
+from models.sql_models import GeneralResult, LocationResult, EvolutionResult
 from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT, app
+
 
 PAGE_SIZE = 100
 

@@ -123,7 +123,7 @@ class EvolutionResult(db.Model):
     def is_in(topic_id, day):
         results = EvolutionResult.query\
             .filter(EvolutionResult.topic_id == topic_id)\
-            .filter(EvolutionResult.day == datetime.datetime.strptime(day, "%a %b %d %X %z %Y").date())\
+            .filter(EvolutionResult.day == datetime.datetime.strptime(day, "%d-%m-%Y").date())\
             .all()
         return len(results) > 0
 
