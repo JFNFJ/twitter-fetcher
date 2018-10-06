@@ -11,7 +11,7 @@ from flask_cors import CORS, cross_origin
 
 from TwitterFetcher import TwitterFetcher
 from Threader import Threader
-from models.models import User, Topic
+from models.models import User, Topic, GeneralResult, EvolutionResult, LocationResult
 from oauth import default_provider
 from settings import app
 from models.models import db
@@ -110,8 +110,7 @@ def get_results(topic_id):
     if error:
         return error
     app.logger.debug("Topic: %s", topic_id)
-    # TODO
-    return str(f"Results {topic_id}")
+    return json.dumps(query_results(topic_id=topic_id))
 
 
 # Auxiliar
@@ -132,6 +131,7 @@ def validate_token(headers):
 def start_fetching(topic, topic_id, user_id, deadline=datetime.date.today(), lang='es'):
     twitter_fetcher = TwitterFetcher(deadline, topic_id, user_id)
     twitter_fetcher.stream(topic, languages=[lang])
+    threader.delete_thread(user_id, topic_id)
 
 
 def init_process(target, args):
@@ -139,6 +139,19 @@ def init_process(target, args):
     p.daemon = True
     p.start()
     return p
+
+
+def query_results(topic_id):
+    gr = GeneralResult.query.filter_by(topic_id=topic_id).all()[0].to_dict()
+    lrs = []
+    lr = LocationResult.query.filter_by(topic_id=topic_id).all()
+    for l in lr:
+        lrs.append(l.to_dict())
+    ers = []
+    er = EvolutionResult.query.filter_by(topic_id=topic_id).all()
+    for e in er:
+        ers.append(e.to_dict())
+    return {"generalResults": gr, "locationResults": lrs, "evolutionResults": ers}
 
 
 if __name__ == '__main__':

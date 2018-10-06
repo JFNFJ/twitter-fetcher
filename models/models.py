@@ -99,6 +99,14 @@ class GeneralResult(db.Model):
         return f"<GeneralResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}')>"
 
+    def to_dict(self):
+        return {
+            'topic_id': self.topic_id,
+            'positive': self.positive,
+            'negative': self.negative,
+            'neutral': self.neutral
+        }
+
 
 class EvolutionResult(db.Model):
     __tablename__ = "evolution_results"
@@ -131,6 +139,15 @@ class EvolutionResult(db.Model):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', day='{self.day}')>"
 
+    def to_dict(self):
+        return {
+            'topic_id': self.topic_id,
+            'positive': self.positive,
+            'negative': self.negative,
+            'neutral': self.neutral,
+            'day': datetime.datetime.strftime(self.day, "%d-%m-%Y")
+        }
+
 
 class LocationResult(db.Model):
     __tablename__ = "location_results"
@@ -161,6 +178,15 @@ class LocationResult(db.Model):
     def __repr__(self):
         return f"<LocationResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', location='{self.location}')>"
+
+    def to_dict(self):
+        return {
+            'topic_id': self.topic_id,
+            'positive': self.positive,
+            'negative': self.negative,
+            'neutral': self.neutral,
+            'location': self.location
+        }
 
 
 # OAuth Models
