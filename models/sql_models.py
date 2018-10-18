@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from sqlalchemy.exc import NoSuchColumnError
 from passlib.hash import bcrypt
 
 import datetime
@@ -97,10 +98,13 @@ class GeneralResult(Base):
 
     @staticmethod
     def is_in(topic_id):
-        results = session.query(GeneralResult) \
-            .filter(GeneralResult.topic_id == topic_id) \
-            .all()
-        return len(results) > 0
+        try:
+            results = session.query(GeneralResult) \
+                .filter(GeneralResult.topic_id == topic_id) \
+                .all()
+            return len(results) > 0
+        except NoSuchColumnError:
+            print(f"Error de columna: {topic_id}")
 
     def __repr__(self):
         return f"<GeneralResult(topic='{self.topic}', positive='{self.positive}', " \

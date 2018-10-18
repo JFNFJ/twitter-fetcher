@@ -24,8 +24,6 @@ class TwitterFetcher(StreamListener):
     """
     tweet_fields = ["id", "full_text", "text", "created_at", "geo", "coordinates", "place", "lang", "extended"]
     user_fields = ["id", "name", "location"]
-    #tweet_fields = ["full_text"]
-    #user_fields = []
 
     def __init__(self, deadline, topic_id, user_id):
         """
@@ -38,7 +36,6 @@ class TwitterFetcher(StreamListener):
         self.auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         self.auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
         self.twitter = Twitter(auth=OAuth(ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
-        #self.twitter = API(self.auth)
         self.bom = BotMeter()
         self.deadline = deadline
         self.topic = ""
@@ -183,8 +180,7 @@ class TwitterFetcher(StreamListener):
         filtered_data = self._extract(tweet, TwitterFetcher.tweet_fields)
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
-        filtered_data["topic"] = self.topic
-        filtered_data["user_id"] = self.user_id
+        filtered_data["social"] = {"topic": self.topic, "topic_id": self.topic_id, "user_id": self.user_id}
         self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
         self._initialize_results(filtered_data)
         return filtered_data
@@ -215,6 +211,7 @@ class TwitterFetcher(StreamListener):
         return {key: value for key, value in json_fields.items() if key in fields}
 
     def _initialize_results(self, tweet):
+        print(self.topic_id)
         if not GeneralResult.is_in(self.topic_id):
             GeneralResult.create(self.topic_id)
         if not EvolutionResult.is_in(self.topic_id, tweet["created_at"]):
