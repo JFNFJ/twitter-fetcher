@@ -6,12 +6,13 @@ from tweepy import Stream
 from twitter import Twitter, OAuth
 from geotext import GeoText
 
+import re
 import time
 import json
 import datetime
 from redis import StrictRedis
 from BotMeter import BotMeter
-from models.sql_models import GeneralResult, LocationResult, EvolutionResult
+from models.sql_models import GeneralResult, LocationResult, EvolutionResult, SourceResult
 from settings import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN, REDIS_HOST, REDIS_PORT, app
 
 
@@ -51,7 +52,6 @@ class TwitterFetcher(StreamListener):
         @return: True
         """
         tweet = json.loads(data)
-        print(tweet)
 
         if 'limit' in tweet.keys():
             return True
@@ -181,6 +181,7 @@ class TwitterFetcher(StreamListener):
         filtered_data["user"] = self._extract(tweet["user"], TwitterFetcher.user_fields)
         filtered_data["CC"] = self._get_location(tweet["user"]["location"])
         filtered_data["social"] = {"topic": self.topic, "topic_id": self.topic_id, "user_id": self.user_id}
+        filtered_data["source"] = self._get_source(tweet["source"])
         self.redis.publish(f'twitter:stream', json.dumps(filtered_data))
         self._initialize_results(filtered_data)
         return filtered_data
@@ -210,6 +211,35 @@ class TwitterFetcher(StreamListener):
         """
         return {key: value for key, value in json_fields.items() if key in fields}
 
+    @staticmethod
+    def _get_source(source):
+        if "Twitter Lite" in source:
+            return "Twitter Lite"
+        elif "Twitter for Android" in source:
+            return "Android"
+        elif "Twitter for iPhone" in source:
+            return "iPhone"
+        elif "Twitter Web Client" in source:
+            return "Web Client"
+        elif "Twitter for iPad" in source:
+            return "iPhone"
+        elif "Hootsuite Inc." in source:
+            return "Hootsuite"
+        elif "IFTTT" in source:
+            return "IFTTT"
+        elif "TweetDeck" in source:
+            return "TweetDeck"
+        elif "Tu Estas" in source:
+            return "Tu Estas"
+        elif "TW Blue" in source:
+            return "TW Blue"
+        elif "WordPress.com" in source:
+            return "WordPress"
+        elif "Facebook" in source:
+            return "Facebook"
+        else:
+            return re.findall(">(.*?)</a>", source)[0]
+
     def _initialize_results(self, tweet):
         print(self.topic_id)
         if not GeneralResult.is_in(self.topic_id):
@@ -218,3 +248,5 @@ class TwitterFetcher(StreamListener):
             EvolutionResult.create(self.topic_id, tweet["created_at"])
         if not LocationResult.is_in(self.topic_id, tweet["CC"]):
             LocationResult.create(self.topic_id, tweet["CC"])
+        if not SourceResult.is_in(self.topic_id, tweet["source"]):
+            SourceResult.create(self.topic_id, tweet["source"])

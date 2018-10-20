@@ -64,6 +64,7 @@ class Topic(Base):
     general_result = relationship("GeneralResult", uselist=False, backref="topic", cascade="all,delete")
     evolution_results = relationship("EvolutionResult", back_populates="topic", cascade="all,delete")
     location_results = relationship("LocationResult", back_populates="topic", cascade="all,delete")
+    source_results = relationship("SourceResult", back_populates="topic", cascade="all,delete")
 
     def __repr__(self):
         return f"<Topic(name='{self.name}', deadline='{self.deadline}', " \
@@ -172,3 +173,42 @@ class LocationResult(Base):
     def __repr__(self):
         return f"<LocationResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', location='{self.location}')>"
+
+class SourceResult(Base):
+    __tablename__ = "source_results"
+
+    topic_id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+    source = Column(String, primary_key=True)
+    positive = Column(Integer)
+    negative = Column(Integer)
+    neutral = Column(Integer)
+
+    topic = relationship("Topic", back_populates="source_results")
+
+    @staticmethod
+    def create(topic_id, source):
+        result = SourceResult(topic_id=topic_id, source=source, positive=0, negative=0, neutral=0)
+        session.add(result)
+        session.commit()
+        return result
+
+    @staticmethod
+    def is_in(topic_id, source):
+        results = session.query(SourceResult) \
+            .filter(SourceResult.topic_id == topic_id) \
+            .filter(SourceResult.source == source) \
+            .all()
+        return len(results) > 0
+
+    def __repr__(self):
+        return f"<SourceResult(topic='{self.topic}', positive='{self.positive}', " \
+               f"negative='{self.negative}', neutral='{self.neutral}', source='{self.source}')>"
+
+    def to_dict(self):
+        return {
+            'topic_id': self.topic_id,
+            'positive': self.positive,
+            'negative': self.negative,
+            'neutral': self.neutral,
+            'source': self.source
+        }

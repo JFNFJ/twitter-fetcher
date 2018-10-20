@@ -11,7 +11,7 @@ from flask_cors import CORS, cross_origin
 
 from TwitterFetcher import TwitterFetcher
 from Threader import Threader
-from models.models import User, Topic, GeneralResult, EvolutionResult, LocationResult
+from models.models import User, Topic, GeneralResult, EvolutionResult, LocationResult, SourceResult
 from oauth import default_provider
 from settings import app
 from models.models import db
@@ -70,7 +70,7 @@ def sign_up():
         {'name': user.name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
 
 
-@app.route('/api/password/reset_with_token/', methods=['POST'])
+@app.route('/api/password/reset_with_token', methods=['POST'])
 def reset_with_token():
     token = request.args.get('token')
     try:
@@ -81,11 +81,14 @@ def reset_with_token():
         user = User.query.filter_by(email=email).first()
         user.password = password
         db.session.commit()
-        return json.dumps({"status": "ok", "name": user.name})
+        expiration_date, token = generateToken(user)
+
+        return json.dumps(
+            {"status": "ok", 'name': user.name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
     except:
         return "Expired token", 404
 
-@app.route('/api/password/reset/', methods=["POST"])
+@app.route('/api/password/reset', methods=["POST"])
 def reset():
     req = request.get_json(force=True)
     email = req["email"]
@@ -183,6 +186,7 @@ def init_process(target, args):
 
 
 def query_results(topic_id):
+    topic = Topic.query.filter_by(id=topic_id).first()
     gr = GeneralResult.query.filter_by(topic_id=topic_id).all()[0].to_dict()
     lrs = []
     lr = LocationResult.query.filter_by(topic_id=topic_id).all()
@@ -192,7 +196,12 @@ def query_results(topic_id):
     er = EvolutionResult.query.filter_by(topic_id=topic_id).all()
     for e in er:
         ers.append(e.to_dict())
-    return {"generalResults": gr, "locationResults": lrs, "evolutionResults": ers}
+    srs = []
+    sr = SourceResult.query.filter_by(topic_id=topic_id).all()
+    for s in sr:
+        srs.append(s.to_dict())
+    return {"topic": topic.to_dict(), "generalResults": gr, "locationResults": lrs,
+            "evolutionResults": ers, "sourceResults": srs}
 
 
 if __name__ == '__main__':
