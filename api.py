@@ -5,7 +5,7 @@ import signal
 from multiprocessing import Process
 
 import jwt
-from flask import request
+from flask import request, url_for, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 
@@ -15,6 +15,8 @@ from models.models import User, Topic, GeneralResult, EvolutionResult, LocationR
 from oauth import default_provider
 from settings import app
 from models.models import db
+from util.security import ts
+from util.mailers import ResetPasswordMailer
 
 oauth = default_provider(app)
 cors = CORS(app)
@@ -66,6 +68,45 @@ def sign_up():
     app.logger.debug("User: %s", user)
     return json.dumps(
         {'name': user.name, 'token': token.decode('utf-8'), 'expire_utc': int(expiration_date.timestamp() * 1000)}), 200
+
+
+@app.route('/api/password/reset_with_token/', methods=['POST'])
+def reset_with_token():
+    token = request.args.get('token')
+    try:
+        email = ts.loads(token, salt="recover-key", max_age=86400)
+        req = request.get_json(force=True)
+        password = req["password"]
+
+        user = User.query.filter_by(email=email).first()
+        user.password = password
+        db.session.commit()
+        return json.dumps({"status": "ok", "name": user.name})
+    except:
+        return "Expired token", 404
+
+@app.route('/api/password/reset/', methods=["POST"])
+def reset():
+    req = request.get_json(force=True)
+    email = req["email"]
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return "User not found", 404
+
+    subject = "SocialCAT - Reestablecer clave"
+    token = ts.dumps(email, salt='recover-key')
+    if request.environ['HTTP_ORIGIN'] is not None:
+        recover_url = request.environ['HTTP_ORIGIN'] + '/password/reset_with_token/?token=' + token
+        html = render_template(
+            'recover_password.html',
+            recover_url=recover_url)
+
+        ResetPasswordMailer.send_email(user.email, subject, html)
+        response = {"status": "ok"}
+    else:
+        response = {"status": "error"}
+    return json.dumps(response)
 
 
 @app.route("/api/login", methods=['POST'])

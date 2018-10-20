@@ -2,6 +2,7 @@ aniso8601==3.0.2
 atomicwrites==1.1.5
 attrs==18.1.0
 bcrypt==3.1.4
+blinker==1.4
 botometer==1.3
 certifi==2018.4.16
 cffi==1.11.5
@@ -11,6 +12,7 @@ Flask==1.0.2
 Flask-API==1.0
 Flask-Cors==3.0.6
 Flask-JWT-Extended==3.12.1
+Flask-Mail==0.9.1
 Flask-OAuthlib==0.9.5
 Flask-RESTful==0.3.6
 Flask-SQLAlchemy==2.3.2
