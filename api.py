@@ -187,7 +187,11 @@ def init_process(target, args):
 
 def query_results(topic_id):
     topic = Topic.query.filter_by(id=topic_id).first()
-    gr = GeneralResult.query.filter_by(topic_id=topic_id).all()[0].to_dict()
+    gr = GeneralResult.query.filter_by(topic_id=topic_id).all()
+    if gr != []:
+        gr = gr[0].to_dict()
+    else:
+        gr = {}
     lrs = []
     lr = LocationResult.query.filter_by(topic_id=topic_id).all()
     for l in lr:

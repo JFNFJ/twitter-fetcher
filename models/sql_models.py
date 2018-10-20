@@ -111,6 +111,14 @@ class GeneralResult(Base):
         return f"<GeneralResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}')>"
 
+    def to_dict(self):
+       return {
+           'topic_id': self.topic_id,
+           'positive': self.positive,
+           'negative': self.negative,
+           'neutral': self.neutral
+       }
+
 
 class EvolutionResult(Base):
     __tablename__ = "evolution_results"
@@ -143,6 +151,15 @@ class EvolutionResult(Base):
         return f"<EvolutionResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', day='{self.day}')>"
 
+    def to_dict(self):
+       return {
+           'topic_id': self.topic_id,
+           'positive': self.positive,
+           'negative': self.negative,
+           'neutral': self.neutral,
+           'day': datetime.datetime.strftime(self.day, "%d-%m-%Y")
+       }
+
 
 class LocationResult(Base):
     __tablename__ = "location_results"
@@ -173,6 +190,16 @@ class LocationResult(Base):
     def __repr__(self):
         return f"<LocationResult(topic='{self.topic}', positive='{self.positive}', " \
                f"negative='{self.negative}', neutral='{self.neutral}', location='{self.location}')>"
+
+    def to_dict(self):
+       return {
+           'topic_id': self.topic_id,
+           'positive': self.positive,
+           'negative': self.negative,
+           'neutral': self.neutral,
+           'location': self.location
+       }
+
 
 class SourceResult(Base):
     __tablename__ = "source_results"
