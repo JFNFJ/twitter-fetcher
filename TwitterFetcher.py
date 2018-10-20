@@ -51,7 +51,6 @@ class TwitterFetcher(StreamListener):
         @return: True
         """
         tweet = json.loads(data)
-        print(tweet)
 
         if 'limit' in tweet.keys():
             return True
@@ -211,7 +210,6 @@ class TwitterFetcher(StreamListener):
         return {key: value for key, value in json_fields.items() if key in fields}
 
     def _initialize_results(self, tweet):
-        print(self.topic_id)
         if not GeneralResult.is_in(self.topic_id):
             GeneralResult.create(self.topic_id)
         if not EvolutionResult.is_in(self.topic_id, tweet["created_at"]):
