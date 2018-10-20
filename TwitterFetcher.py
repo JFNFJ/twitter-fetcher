@@ -241,7 +241,6 @@ class TwitterFetcher(StreamListener):
             return re.findall(">(.*?)</a>", source)[0]
 
     def _initialize_results(self, tweet):
-        print(self.topic_id)
         if not GeneralResult.is_in(self.topic_id):
             GeneralResult.create(self.topic_id)
         if not EvolutionResult.is_in(self.topic_id, tweet["created_at"]):
