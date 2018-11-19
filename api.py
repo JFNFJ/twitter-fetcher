@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import signal
+import threading
 from multiprocessing import Process
 
 import jwt
@@ -41,8 +42,12 @@ def create_topic():
     app.logger.debug("Token: %s, request: %s", token, req)
     req['deadline'] = datetime.datetime.strptime(req['deadline'], "%d-%m-%Y").date()
     topic = Topic.create(token['user_id'], req['name'], req['deadline'], req['language'])
-    p = init_process(target=start_fetching, args=(req["name"], topic.id, token['user_id'], req["deadline"], req["language"]))
-    threader.add_thread(token["user_id"], {"process": p.pid, "topic": topic.to_dict()})
+    thread = threading.Thread(target=init_process, args=(start_fetching, [req["name"], topic.id,
+                                                                          token['user_id'], req["deadline"],
+                                                                          req["language"], topic]),
+                              daemon=True)
+    thread.start()
+    # p = init_process(target=start_fetching, args=(req["name"], topic.id, token['user_id'], req["deadline"], req["language"]))
     return json.dumps(topic.to_dict())
 
 
@@ -179,9 +184,10 @@ def start_fetching(topic, topic_id, user_id, deadline=datetime.date.today(), lan
 
 
 def init_process(target, args):
-    p = Process(target=target, args=args)
+    p = Process(target=target, args=args[0:5])
     p.daemon = True
     p.start()
+    threader.add_thread(args[2], {"process": p.pid, "topic": args[5].to_dict()})
     return p
 
 
