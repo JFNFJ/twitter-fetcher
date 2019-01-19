@@ -203,7 +203,7 @@ def query_results(topic_id):
     for l in lr:
         lrs.append(l.to_dict())
     ers = []
-    er = EvolutionResult.query.filter_by(topic_id=topic_id).all()
+    er = EvolutionResult.query.filter_by(topic_id=topic_id).order_by("day asc").all()
     for e in er:
         ers.append(e.to_dict())
     srs = []
