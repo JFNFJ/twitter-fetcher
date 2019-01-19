@@ -36,12 +36,12 @@ pytest==3.6.2
 python-dotenv==0.8.2
 pytz==2018.5
 redis==2.10.6
-requests==2.18.4
+requests>=2.20.0
 requests-oauthlib==0.8.0
 six==1.11.0
 SQLAlchemy==1.2.8
 tweepy==3.6.0
 twitter==1.18.0
-urllib3==1.22
+urllib3>=1.23
 uWSGI==2.0.17.1
 Werkzeug==0.14.1
